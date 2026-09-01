@@ -8,14 +8,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { checklistProgress, type Card, type Label, type LabelColor } from "@/lib/board";
+import {
+  checklistProgress,
+  type BoardSettings,
+  type Card,
+  type Label,
+  type LabelColor,
+} from "@/lib/board";
+import { dialogTheme } from "@/lib/theme";
 import { LabelPicker } from "./LabelPicker";
 import { AttachmentList } from "./AttachmentList";
+import { CommentSection } from "./CommentSection";
 
 type Props = {
   card: Card | null;
   columnTitle?: string;
   labels: Label[];
+  settings: BoardSettings;
   onClose: () => void;
   onUpdate: (patch: Partial<Omit<Card, "id">>) => void;
   onToggleLabel: (label: string) => void;
@@ -27,6 +36,9 @@ type Props = {
   onAddChecklistItem: (text: string) => void;
   onToggleChecklistItem: (itemId: string) => void;
   onRemoveChecklistItem: (itemId: string) => void;
+  onAddComment: (text: string) => void;
+  onUpdateComment: (commentId: string, text: string) => void;
+  onRemoveComment: (commentId: string) => void;
   onDelete: () => void;
 };
 
@@ -34,6 +46,7 @@ export function CardDialog({
   card,
   columnTitle,
   labels,
+  settings,
   onClose,
   onUpdate,
   onToggleLabel,
@@ -45,6 +58,9 @@ export function CardDialog({
   onAddChecklistItem,
   onToggleChecklistItem,
   onRemoveChecklistItem,
+  onAddComment,
+  onUpdateComment,
+  onRemoveComment,
   onDelete,
 }: Props) {
   const [title, setTitle] = useState("");
@@ -61,11 +77,15 @@ export function CardDialog({
 
   if (!card) return null;
   const progress = checklistProgress(card);
+  const theme = dialogTheme(settings.dialogTheme, settings.boardTheme);
   const pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
 
   return (
     <Dialog open={!!card} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+      <DialogContent
+        className="max-h-[90vh] overflow-y-auto sm:max-w-xl"
+        style={{ ...theme.vars, background: theme.background }}
+      >
         <DialogHeader>
           <DialogTitle className="sr-only">Card details</DialogTitle>
           <DialogDescription className="sr-only">
@@ -86,6 +106,7 @@ export function CardDialog({
 
         <LabelPicker
           labels={labels}
+          labelStyle={settings.labelStyle}
           selected={card.labels ?? []}
           onToggle={onToggleLabel}
           onCreate={onCreateLabel}
@@ -202,6 +223,13 @@ export function CardDialog({
             </button>
           </div>
         </section>
+
+        <CommentSection
+          comments={card.comments ?? []}
+          onAdd={onAddComment}
+          onUpdate={onUpdateComment}
+          onRemove={onRemoveComment}
+        />
 
         <button
           onClick={() => {

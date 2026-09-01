@@ -42,6 +42,7 @@ function ColorRow({
 
 export function LabelPicker({
   labels,
+  labelStyle = "soft",
   selected,
   onToggle,
   onCreate,
