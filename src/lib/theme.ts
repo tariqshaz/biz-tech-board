@@ -153,12 +153,14 @@ export function boardTheme(id: string) {
   return BOARD_THEMES.find((t) => t.id === id) ?? BOARD_THEMES[0]!;
 }
 
-export function dialogTheme(id: string, boardThemeId: string) {
-  if (id === "match") {
-    const base = boardTheme(boardThemeId);
-    return { ...base, background: base.vars["--card"] ?? base.background };
-  }
-  return DIALOG_THEMES.find((t) => t.id === id) ?? dialogTheme("match", boardThemeId);
+export function dialogTheme(id: string, boardThemeId: string): SurfaceTheme {
+  const base = boardTheme(boardThemeId);
+  const fallback: SurfaceTheme = {
+    ...base,
+    background: base.vars["--card"] ?? base.background,
+  };
+  if (id === "match") return fallback;
+  return DIALOG_THEMES.find((t) => t.id === id) ?? fallback;
 }
 
 export function themeStyle(theme: SurfaceTheme, includeBackground = true) {
