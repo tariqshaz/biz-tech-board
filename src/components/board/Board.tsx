@@ -81,7 +81,7 @@ export function Board() {
     ? state.columns.find((c) => c.id === activeId.slice(4))
     : null;
   const total = Object.keys(state.cards).length;
-  const matching = Object.values(state.cards).filter((c) => matchesQuery(c, query)).length;
+  const matching = Object.values(state.cards).filter((c) => matchesQuery(c, state.labels, query)).length;
   const openCard = openCardId ? state.cards[openCardId] ?? null : null;
   const openCardColumn = openCardId ? findColumnOfCard(state, openCardId) : undefined;
 
@@ -148,6 +148,7 @@ export function Board() {
                   key={column.id}
                   column={column}
                   cards={state.cards}
+                  boardLabels={state.labels}
                   query={query}
                   onAddCard={(title) => board.addCard(column.id, title)}
                   onOpenCard={setOpenCardId}
@@ -207,7 +208,17 @@ export function Board() {
         columnTitle={openCardColumn?.title ?? ""}
         onClose={() => setOpenCardId(null)}
         onUpdate={(patch) => openCardId && board.updateCard(openCardId, patch)}
+        labels={state.labels}
         onToggleLabel={(label) => openCardId && board.toggleLabel(openCardId, label)}
+        onCreateLabel={board.createLabel}
+        onUpdateLabel={board.updateLabel}
+        onDeleteLabel={board.deleteLabel}
+        onUploadFile={async (file) => {
+          if (openCardId) await board.addAttachment(openCardId, file);
+        }}
+        onRemoveFile={(attachmentId) => {
+          if (openCardId) void board.removeAttachment(openCardId, attachmentId);
+        }}
         onAddChecklistItem={(text) => openCardId && board.addChecklistItem(openCardId, text)}
         onToggleChecklistItem={(id) => openCardId && board.toggleChecklistItem(openCardId, id)}
         onRemoveChecklistItem={(id) => openCardId && board.removeChecklistItem(openCardId, id)}

@@ -8,14 +8,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { LABELS, checklistProgress, type Card, type LabelId } from "@/lib/board";
+import { checklistProgress, type Card, type Label, type LabelColor } from "@/lib/board";
+import { LabelPicker } from "./LabelPicker";
+import { AttachmentList } from "./AttachmentList";
 
 type Props = {
   card: Card | null;
   columnTitle?: string;
+  labels: Label[];
   onClose: () => void;
   onUpdate: (patch: Partial<Omit<Card, "id">>) => void;
-  onToggleLabel: (label: LabelId) => void;
+  onToggleLabel: (label: string) => void;
+  onCreateLabel: (name: string, color: LabelColor) => void;
+  onUpdateLabel: (labelId: string, patch: { name?: string; color?: LabelColor }) => void;
+  onDeleteLabel: (labelId: string) => void;
+  onUploadFile: (file: File) => Promise<unknown>;
+  onRemoveFile: (attachmentId: string) => void;
   onAddChecklistItem: (text: string) => void;
   onToggleChecklistItem: (itemId: string) => void;
   onRemoveChecklistItem: (itemId: string) => void;
@@ -25,9 +33,15 @@ type Props = {
 export function CardDialog({
   card,
   columnTitle,
+  labels,
   onClose,
   onUpdate,
   onToggleLabel,
+  onCreateLabel,
+  onUpdateLabel,
+  onDeleteLabel,
+  onUploadFile,
+  onRemoveFile,
   onAddChecklistItem,
   onToggleChecklistItem,
   onRemoveChecklistItem,
@@ -70,30 +84,14 @@ export function CardDialog({
           )}
         </DialogHeader>
 
-        <section className="space-y-2">
-          <h3 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            Labels
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {LABELS.map((label) => {
-              const active = (card.labels ?? []).includes(label.id);
-              return (
-                <button
-                  key={label.id}
-                  onClick={() => onToggleLabel(label.id)}
-                  aria-pressed={active}
-                  className={cn(
-                    "rounded-full border px-3 py-1 text-xs font-medium transition-opacity",
-                    label.className,
-                    !active && "opacity-40 hover:opacity-70",
-                  )}
-                >
-                  {label.name}
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        <LabelPicker
+          labels={labels}
+          selected={card.labels ?? []}
+          onToggle={onToggleLabel}
+          onCreate={onCreateLabel}
+          onUpdate={onUpdateLabel}
+          onDelete={onDeleteLabel}
+        />
 
         <section className="space-y-2">
           <h3 className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
@@ -131,6 +129,12 @@ export function CardDialog({
             className="w-full resize-none rounded-lg border border-border bg-input/40 p-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring"
           />
         </section>
+
+        <AttachmentList
+          attachments={card.attachments ?? []}
+          onUpload={onUploadFile}
+          onRemove={onRemoveFile}
+        />
 
         <section className="space-y-2">
           <h3 className="flex items-center gap-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
