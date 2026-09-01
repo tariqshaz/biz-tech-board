@@ -106,6 +106,9 @@ export function useBoard() {
   const deleteCard = useCallback((cardId: string) => {
     setState((prev) => {
       const cards = { ...prev.cards };
+      (cards[cardId]?.attachments ?? []).forEach((a) => {
+        void deleteFile(a.id).catch(() => undefined);
+      });
       delete cards[cardId];
       return {
         ...prev,
