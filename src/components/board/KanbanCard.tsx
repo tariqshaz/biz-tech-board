@@ -1,28 +1,25 @@
-import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Trash2 } from "lucide-react";
+import { CalendarDays, CheckSquare, GripVertical, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { Card } from "@/lib/board";
+import { LABELS, checklistProgress, dueStatus, formatDue, type Card } from "@/lib/board";
 
 type Props = {
   card: Card;
-  onRename: (title: string) => void;
+  onOpen: () => void;
   onDelete: () => void;
 };
 
-export function KanbanCard({ card, onRename, onDelete }: Props) {
+export function KanbanCard({ card, onOpen, onDelete }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
     data: { type: "card" },
   });
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(card.title);
-
-  const commit = () => {
-    onRename(draft);
-    setEditing(false);
-  };
+  const labels = (card.labels ?? [])
+    .map((id) => LABELS.find((l) => l.id === id))
+    .filter(Boolean) as typeof LABELS;
+  const progress = checklistProgress(card);
+  const status = dueStatus(card.dueDate);
 
   return (
     <div
@@ -44,32 +41,43 @@ export function KanbanCard({ card, onRename, onDelete }: Props) {
           <GripVertical className="h-4 w-4" />
         </button>
 
-        {editing ? (
-          <input
-            autoFocus
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={commit}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") commit();
-              if (e.key === "Escape") {
-                setDraft(card.title);
-                setEditing(false);
-              }
-            }}
-            className="w-full bg-transparent text-sm leading-snug text-card-foreground outline-none"
-          />
-        ) : (
-          <button
-            onClick={() => {
-              setDraft(card.title);
-              setEditing(true);
-            }}
-            className="flex-1 text-left text-sm leading-snug text-card-foreground"
-          >
-            {card.title}
-          </button>
-        )}
+        <button onClick={onOpen} className="flex-1 space-y-2 text-left">
+          {labels.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {labels.map((l) => (
+                <span
+                  key={l.id}
+                  className={cn("rounded-full border px-2 py-0.5 text-[0.65rem] font-medium", l.className)}
+                >
+                  {l.name}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <span className="block text-sm leading-snug text-card-foreground">{card.title}</span>
+
+          {(progress.total > 0 || card.dueDate) && (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              {card.dueDate && (
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5",
+                    status === "overdue" && "border-destructive/50 text-destructive",
+                    status === "soon" && "border-chart-1/50 text-chart-1",
+                  )}
+                >
+                  <CalendarDays className="h-3 w-3" /> {formatDue(card.dueDate)}
+                </span>
+              )}
+              {progress.total > 0 && (
+                <span className="inline-flex items-center gap-1">
+                  <CheckSquare className="h-3 w-3" /> {progress.done}/{progress.total}
+                </span>
+              )}
+            </div>
+          )}
+        </button>
 
         <button
           onClick={onDelete}

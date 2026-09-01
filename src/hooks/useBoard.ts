@@ -5,6 +5,8 @@ import {
   saveBoard,
   uid,
   type BoardState,
+  type Card,
+  type LabelId,
 } from "@/lib/board";
 
 export function useBoard() {
@@ -27,7 +29,10 @@ export function useBoard() {
       const id = uid();
       return {
         ...prev,
-        cards: { ...prev.cards, [id]: { id, title: trimmed } },
+        cards: {
+          ...prev.cards,
+          [id]: { id, title: trimmed, description: "", labels: [], dueDate: null, checklist: [] },
+        },
         columns: prev.columns.map((c) =>
           c.id === columnId ? { ...c, cardIds: [...c.cardIds, id] } : c,
         ),
@@ -40,8 +45,59 @@ export function useBoard() {
     if (!trimmed) return;
     setState((prev) => ({
       ...prev,
-      cards: { ...prev.cards, [cardId]: { id: cardId, title: trimmed } },
+      cards: { ...prev.cards, [cardId]: { ...prev.cards[cardId]!, title: trimmed } },
     }));
+  }, []);
+
+  const updateCard = useCallback((cardId: string, patch: Partial<Omit<Card, "id">>) => {
+    setState((prev) => {
+      const card = prev.cards[cardId];
+      if (!card) return prev;
+      return { ...prev, cards: { ...prev.cards, [cardId]: { ...card, ...patch } } };
+    });
+  }, []);
+
+  const toggleLabel = useCallback((cardId: string, label: LabelId) => {
+    setState((prev) => {
+      const card = prev.cards[cardId];
+      if (!card) return prev;
+      const labels = card.labels ?? [];
+      const next = labels.includes(label)
+        ? labels.filter((l) => l !== label)
+        : [...labels, label];
+      return { ...prev, cards: { ...prev.cards, [cardId]: { ...card, labels: next } } };
+    });
+  }, []);
+
+  const addChecklistItem = useCallback((cardId: string, text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setState((prev) => {
+      const card = prev.cards[cardId];
+      if (!card) return prev;
+      const checklist = [...(card.checklist ?? []), { id: uid(), text: trimmed, done: false }];
+      return { ...prev, cards: { ...prev.cards, [cardId]: { ...card, checklist } } };
+    });
+  }, []);
+
+  const toggleChecklistItem = useCallback((cardId: string, itemId: string) => {
+    setState((prev) => {
+      const card = prev.cards[cardId];
+      if (!card) return prev;
+      const checklist = (card.checklist ?? []).map((i) =>
+        i.id === itemId ? { ...i, done: !i.done } : i,
+      );
+      return { ...prev, cards: { ...prev.cards, [cardId]: { ...card, checklist } } };
+    });
+  }, []);
+
+  const removeChecklistItem = useCallback((cardId: string, itemId: string) => {
+    setState((prev) => {
+      const card = prev.cards[cardId];
+      if (!card) return prev;
+      const checklist = (card.checklist ?? []).filter((i) => i.id !== itemId);
+      return { ...prev, cards: { ...prev.cards, [cardId]: { ...card, checklist } } };
+    });
   }, []);
 
 
@@ -112,6 +168,17 @@ export function useBoard() {
     [],
   );
 
+  const moveColumn = useCallback((columnId: string, toIndex: number) => {
+    setState((prev) => {
+      const from = prev.columns.findIndex((c) => c.id === columnId);
+      if (from === -1) return prev;
+      const columns = [...prev.columns];
+      const [moved] = columns.splice(from, 1) as [(typeof columns)[number]];
+      columns.splice(Math.max(0, Math.min(toIndex, columns.length)), 0, moved);
+      return { ...prev, columns };
+    });
+  }, []);
+
   const resetBoard = useCallback(() => setState(createInitialBoard()), []);
 
   return {
@@ -119,7 +186,13 @@ export function useBoard() {
     hydrated,
     addCard,
     renameCard,
+    updateCard,
+    toggleLabel,
+    addChecklistItem,
+    toggleChecklistItem,
+    removeChecklistItem,
     deleteCard,
+    moveColumn,
     addColumn,
     renameColumn,
     deleteColumn,
