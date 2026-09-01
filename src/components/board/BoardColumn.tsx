@@ -6,11 +6,13 @@ import { GripHorizontal, Plus, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { KanbanCard } from "./KanbanCard";
 import { matchesQuery, type BoardState, type Column, type Label } from "@/lib/board";
+import type { LabelStyle } from "@/lib/theme";
 
 type Props = {
   column: Column;
   cards: BoardState["cards"];
   boardLabels: Label[];
+  labelStyle?: LabelStyle;
   query: string;
   onAddCard: (title: string) => void;
   onOpenCard: (cardId: string) => void;
@@ -23,6 +25,7 @@ export function BoardColumn({
   column,
   cards,
   boardLabels,
+  labelStyle = "soft",
   query,
   onAddCard,
   onOpenCard,
@@ -117,6 +120,7 @@ export function BoardColumn({
               key={id}
               card={cards[id]!}
               boardLabels={boardLabels}
+              labelStyle={labelStyle}
               onOpen={() => onOpenCard(id)}
               onDelete={() => onDeleteCard(id)}
             />

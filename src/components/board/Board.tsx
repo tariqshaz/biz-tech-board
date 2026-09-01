@@ -15,11 +15,13 @@ import {
   horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { Plus, RotateCcw, Search, X } from "lucide-react";
+import { Palette, Plus, RotateCcw, Search, X } from "lucide-react";
 import { useBoard } from "@/hooks/useBoard";
 import { findColumnOfCard, matchesQuery } from "@/lib/board";
 import { BoardColumn } from "./BoardColumn";
 import { CardDialog } from "./CardDialog";
+import { BoardSettingsDialog } from "./BoardSettingsDialog";
+import { boardTheme, themeStyle } from "@/lib/theme";
 
 export function Board() {
   const board = useBoard();
@@ -29,6 +31,8 @@ export function Board() {
   const [addingList, setAddingList] = useState(false);
   const [query, setQuery] = useState("");
   const [openCardId, setOpenCardId] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const theme = boardTheme(state.settings.boardTheme);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -86,7 +90,7 @@ export function Board() {
   const openCardColumn = openCardId ? findColumnOfCard(state, openCardId) : undefined;
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col" style={themeStyle(theme)}>
       <header className="border-b border-border px-6 py-5">
         <div className="mx-auto flex max-w-[110rem] flex-wrap items-center gap-4">
           <div>
@@ -119,6 +123,12 @@ export function Board() {
               )}
             </div>
             <button
+              onClick={() => setSettingsOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Palette className="h-4 w-4" /> Appearance
+            </button>
+            <button
               onClick={() => {
                 if (confirm("Reset the board to its starting cards?")) board.resetBoard();
               }}
@@ -149,6 +159,7 @@ export function Board() {
                   column={column}
                   cards={state.cards}
                   boardLabels={state.labels}
+                  labelStyle={state.settings.labelStyle}
                   query={query}
                   onAddCard={(title) => board.addCard(column.id, title)}
                   onOpenCard={setOpenCardId}
@@ -209,6 +220,7 @@ export function Board() {
         onClose={() => setOpenCardId(null)}
         onUpdate={(patch) => openCardId && board.updateCard(openCardId, patch)}
         labels={state.labels}
+        settings={state.settings}
         onToggleLabel={(label) => openCardId && board.toggleLabel(openCardId, label)}
         onCreateLabel={board.createLabel}
         onUpdateLabel={board.updateLabel}
@@ -222,7 +234,19 @@ export function Board() {
         onAddChecklistItem={(text) => openCardId && board.addChecklistItem(openCardId, text)}
         onToggleChecklistItem={(id) => openCardId && board.toggleChecklistItem(openCardId, id)}
         onRemoveChecklistItem={(id) => openCardId && board.removeChecklistItem(openCardId, id)}
+        onAddComment={(text) => openCardId && board.addComment(openCardId, text)}
+        onUpdateComment={(id, text) => openCardId && board.updateComment(openCardId, id, text)}
+        onRemoveComment={(id) => openCardId && board.removeComment(openCardId, id)}
         onDelete={() => openCardId && board.deleteCard(openCardId)}
+      />
+
+      <BoardSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        settings={state.settings}
+        labels={state.labels}
+        onChange={board.updateSettings}
+        onReset={board.resetSettings}
       />
     </div>
   );

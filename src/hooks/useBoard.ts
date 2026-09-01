@@ -11,6 +11,8 @@ import {
   type Card,
   type LabelColor,
   type LabelId,
+  type BoardSettings,
+  DEFAULT_SETTINGS,
 } from "@/lib/board";
 import { deleteFile, putFile } from "@/lib/attachments";
 
@@ -263,6 +265,50 @@ export function useBoard() {
     });
   }, []);
 
+  const addComment = useCallback((cardId: string, text: string, author = "You") => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setState((prev) => {
+      const card = prev.cards[cardId];
+      if (!card) return prev;
+      const comments = [
+        ...(card.comments ?? []),
+        { id: uid(), author, text: trimmed, createdAt: new Date().toISOString() },
+      ];
+      return { ...prev, cards: { ...prev.cards, [cardId]: { ...card, comments } } };
+    });
+  }, []);
+
+  const updateComment = useCallback((cardId: string, commentId: string, text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setState((prev) => {
+      const card = prev.cards[cardId];
+      if (!card) return prev;
+      const comments = (card.comments ?? []).map((c) =>
+        c.id === commentId ? { ...c, text: trimmed } : c,
+      );
+      return { ...prev, cards: { ...prev.cards, [cardId]: { ...card, comments } } };
+    });
+  }, []);
+
+  const removeComment = useCallback((cardId: string, commentId: string) => {
+    setState((prev) => {
+      const card = prev.cards[cardId];
+      if (!card) return prev;
+      const comments = (card.comments ?? []).filter((c) => c.id !== commentId);
+      return { ...prev, cards: { ...prev.cards, [cardId]: { ...card, comments } } };
+    });
+  }, []);
+
+  const updateSettings = useCallback((patch: Partial<BoardSettings>) => {
+    setState((prev) => ({ ...prev, settings: { ...prev.settings, ...patch } }));
+  }, []);
+
+  const resetSettings = useCallback(() => {
+    setState((prev) => ({ ...prev, settings: { ...DEFAULT_SETTINGS } }));
+  }, []);
+
   const resetBoard = useCallback(() => setState(createInitialBoard()), []);
 
   return {
@@ -287,6 +333,11 @@ export function useBoard() {
     renameColumn,
     deleteColumn,
     moveCard,
+    addComment,
+    updateComment,
+    removeComment,
+    updateSettings,
+    resetSettings,
     resetBoard,
   };
 }

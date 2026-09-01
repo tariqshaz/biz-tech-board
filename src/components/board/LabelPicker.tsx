@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LABEL_COLORS, labelClass, labelDot, type Label, type LabelColor } from "@/lib/board";
+import type { LabelStyle } from "@/lib/theme";
 
 type Props = {
   labels: Label[];
+  labelStyle?: LabelStyle;
   selected: string[];
   onToggle: (labelId: string) => void;
   onCreate: (name: string, color: LabelColor) => void;
@@ -40,6 +42,7 @@ function ColorRow({
 
 export function LabelPicker({
   labels,
+  labelStyle = "soft",
   selected,
   onToggle,
   onCreate,
@@ -83,7 +86,7 @@ export function LabelPicker({
                 aria-pressed={active}
                 className={cn(
                   "rounded-full border px-3 py-1 text-xs font-medium transition-opacity",
-                  labelClass(label.color),
+                  labelClass(label.color, labelStyle),
                   !active && "opacity-40 hover:opacity-70",
                 )}
               >
