@@ -35,7 +35,7 @@ Package the finished web app as a standalone desktop application using Electron 
 
 ## Timeline
 
-Each milestone above is roughly one working session with me. Calendar-wise, at 1–3 hours/day: usable Kanban day 1, M1–M4 (real multi-user app) within about a week, M1–M6 in two to three weeks, AI and polish continuing after that.
+Each milestone above is roughly one working session with me. Calendar-wise, at 1–3 hours/day: usable Kanban day 1, M1–M4 (real multi-user app) within about a week, M1–M6 in two to three weeks, AI and polish continuing after that, then the desktop build (M9) once the web app is final.
 
 ## Technical notes
 
