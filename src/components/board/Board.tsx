@@ -204,7 +204,7 @@ export function Board() {
 
       <CardDialog
         card={openCard}
-        columnTitle={openCardColumn?.title}
+        columnTitle={openCardColumn?.title ?? ""}
         onClose={() => setOpenCardId(null)}
         onUpdate={(patch) => openCardId && board.updateCard(openCardId, patch)}
         onToggleLabel={(label) => openCardId && board.toggleLabel(openCardId, label)}

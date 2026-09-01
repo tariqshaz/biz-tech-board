@@ -113,7 +113,7 @@ export function BoardColumn({
           {visible.map((id) => (
             <KanbanCard
               key={id}
-              card={cards[id]}
+              card={cards[id]!}
               onOpen={() => onOpenCard(id)}
               onDelete={() => onDeleteCard(id)}
             />

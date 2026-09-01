@@ -45,7 +45,7 @@ export function useBoard() {
     if (!trimmed) return;
     setState((prev) => ({
       ...prev,
-      cards: { ...prev.cards, [cardId]: { ...prev.cards[cardId], title: trimmed } },
+      cards: { ...prev.cards, [cardId]: { ...prev.cards[cardId]!, title: trimmed } },
     }));
   }, []);
 
@@ -173,7 +173,7 @@ export function useBoard() {
       const from = prev.columns.findIndex((c) => c.id === columnId);
       if (from === -1) return prev;
       const columns = [...prev.columns];
-      const [moved] = columns.splice(from, 1);
+      const [moved] = columns.splice(from, 1) as [(typeof columns)[number]];
       columns.splice(Math.max(0, Math.min(toIndex, columns.length)), 0, moved);
       return { ...prev, columns };
     });
