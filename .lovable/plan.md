@@ -30,6 +30,9 @@ Same data as Kanban / table / calendar / timeline.
 **M8 — Polish & ship**
 PWA/offline cache, keyboard accessibility, empty states, SEO metadata, publish.
 
+**M9 — Distributable desktop app (.exe) (1 session)**
+Package the finished web app as a standalone desktop application using Electron + `@electron/packager`. Produces installable/standalone builds for Windows (`.exe`/zip), macOS (zip), and Linux (`.tar.gz`). Done only after the web app is feature-complete so the desktop build ships the same product. See the electron-desktop-app build notes: set `base: './'` in `vite.config.ts`, `electron/main.cjs` (CommonJS), `@electron/packager` (not electron-builder), and archive outputs to `/mnt/documents` for download.
+
 ## Timeline
 
 Each milestone above is roughly one working session with me. Calendar-wise, at 1–3 hours/day: usable Kanban day 1, M1–M4 (real multi-user app) within about a week, M1–M6 in two to three weeks, AI and polish continuing after that.
