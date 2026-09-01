@@ -40,9 +40,10 @@ export function useBoard() {
     if (!trimmed) return;
     setState((prev) => ({
       ...prev,
-      cards: { ...prev.cards, [cardId]: { ...prev.cards[cardId], title: trimmed } },
+      cards: { ...prev.cards, [cardId]: { id: cardId, title: trimmed } },
     }));
   }, []);
+
 
   const deleteCard = useCallback((cardId: string) => {
     setState((prev) => {
