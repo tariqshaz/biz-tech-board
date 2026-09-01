@@ -44,6 +44,7 @@ Each milestone above is roughly one working session with me. Calendar-wise, at 1
 - Server logic: `createServerFn` for anything privileged (invites, AI calls); direct client reads through RLS for board data.
 - Security: roles in a dedicated `user_roles` table checked by a security-definer function — never a column on profiles.
 - Ordering: reads live in route loaders via `ensureQueryData` for instant first paint.
+- Desktop packaging (M9): `@electron/packager` bundles the Vite build into a standalone app; set `base: './'` so assets load under `file://`, use `electron/main.cjs` (CommonJS) with `contextIsolation: true` + `nodeIntegration: false`. Archive per-OS outputs to `/mnt/documents` for download.
 
 ## Starting point
 
