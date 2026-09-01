@@ -2,7 +2,7 @@
 
 ## Verdict
 
-Yes, this is very buildable. One correction up front: inside Lovable we don't use Fastify/Electron/Prisma/SQLite. The equivalent stack here is React + TypeScript + TanStack Start (server functions instead of Express/Fastify) + Tailwind + dnd-kit + Lovable Cloud (managed Postgres, auth, storage, realtime, AI). Same architecture, same feature set, far less setup — and it's portable Postgres underneath, so nothing is a dead end. A desktop/offline-first Tauri+SQLite build is out of scope for this environment; the offline story here is PWA + local cache with cloud sync.
+Yes, this is very buildable. One correction up front: inside Lovable we don't use Fastify/Electron/Prisma/SQLite. The equivalent stack here is React + TypeScript + TanStack Start (server functions instead of Express/Fastify) + Tailwind + dnd-kit + Lovable Cloud (managed Postgres, auth, storage, realtime, AI). Same architecture, same feature set, far less setup — and it's portable Postgres underneath, so nothing is a dead end. A native Tauri+SQLite build isn't supported here, but a distributable desktop app **is** achievable via Electron packaging (`@electron/packager`), which produces a standalone app from the same Vite build — see M9.
 
 ## Milestones
 
@@ -30,9 +30,12 @@ Same data as Kanban / table / calendar / timeline.
 **M8 — Polish & ship**
 PWA/offline cache, keyboard accessibility, empty states, SEO metadata, publish.
 
+**M9 — Distributable desktop app (.exe) (1 session)**
+Package the finished web app as a standalone desktop application using Electron + `@electron/packager`. Produces installable/standalone builds for Windows (`.exe`/zip), macOS (zip), and Linux (`.tar.gz`). Done only after the web app is feature-complete so the desktop build ships the same product. See the electron-desktop-app build notes: set `base: './'` in `vite.config.ts`, `electron/main.cjs` (CommonJS), `@electron/packager` (not electron-builder), and archive outputs to `/mnt/documents` for download.
+
 ## Timeline
 
-Each milestone above is roughly one working session with me. Calendar-wise, at 1–3 hours/day: usable Kanban day 1, M1–M4 (real multi-user app) within about a week, M1–M6 in two to three weeks, AI and polish continuing after that.
+Each milestone above is roughly one working session with me. Calendar-wise, at 1–3 hours/day: usable Kanban day 1, M1–M4 (real multi-user app) within about a week, M1–M6 in two to three weeks, AI and polish continuing after that, then the desktop build (M9) once the web app is final.
 
 ## Technical notes
 
@@ -41,6 +44,7 @@ Each milestone above is roughly one working session with me. Calendar-wise, at 1
 - Server logic: `createServerFn` for anything privileged (invites, AI calls); direct client reads through RLS for board data.
 - Security: roles in a dedicated `user_roles` table checked by a security-definer function — never a column on profiles.
 - Ordering: reads live in route loaders via `ensureQueryData` for instant first paint.
+- Desktop packaging (M9): `@electron/packager` bundles the Vite build into a standalone app; set `base: './'` so assets load under `file://`, use `electron/main.cjs` (CommonJS) with `contextIsolation: true` + `nodeIntegration: false`. Archive per-OS outputs to `/mnt/documents` for download.
 
 ## Starting point
 
