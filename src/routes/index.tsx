@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Board } from "@/components/board/Board";
+import { BoardShell } from "@/components/board/BoardShell";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -24,5 +24,5 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  return <Board />;
+  return <BoardShell />;
 }
