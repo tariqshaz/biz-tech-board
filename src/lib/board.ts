@@ -1,18 +1,102 @@
-export type LabelId = "bug" | "priority" | "frontend" | "backend" | "design" | "idea";
+export type LabelId = string;
 
-export const LABELS: Array<{ id: LabelId; name: string; className: string }> = [
-  { id: "priority", name: "Priority", className: "bg-chart-1/20 text-chart-1 border-chart-1/40" },
-  { id: "bug", name: "Bug", className: "bg-destructive/20 text-destructive border-destructive/40" },
-  { id: "frontend", name: "Frontend", className: "bg-chart-2/20 text-chart-2 border-chart-2/40" },
-  { id: "backend", name: "Backend", className: "bg-chart-3/20 text-chart-3 border-chart-3/40" },
-  { id: "design", name: "Design", className: "bg-chart-4/20 text-chart-4 border-chart-4/40" },
-  { id: "idea", name: "Idea", className: "bg-chart-5/20 text-chart-5 border-chart-5/40" },
+export type LabelColor =
+  | "amber"
+  | "red"
+  | "teal"
+  | "blue"
+  | "violet"
+  | "green"
+  | "pink"
+  | "slate";
+
+export const LABEL_COLORS: Array<{ id: LabelColor; name: string; className: string; dot: string }> =
+  [
+    {
+      id: "amber",
+      name: "Amber",
+      className: "bg-chart-1/20 text-chart-1 border-chart-1/40",
+      dot: "bg-chart-1",
+    },
+    {
+      id: "red",
+      name: "Red",
+      className: "bg-destructive/20 text-destructive border-destructive/40",
+      dot: "bg-destructive",
+    },
+    {
+      id: "teal",
+      name: "Teal",
+      className: "bg-chart-2/20 text-chart-2 border-chart-2/40",
+      dot: "bg-chart-2",
+    },
+    {
+      id: "blue",
+      name: "Blue",
+      className: "bg-chart-3/20 text-chart-3 border-chart-3/40",
+      dot: "bg-chart-3",
+    },
+    {
+      id: "violet",
+      name: "Violet",
+      className: "bg-chart-4/20 text-chart-4 border-chart-4/40",
+      dot: "bg-chart-4",
+    },
+    {
+      id: "green",
+      name: "Green",
+      className: "bg-chart-5/20 text-chart-5 border-chart-5/40",
+      dot: "bg-chart-5",
+    },
+    {
+      id: "pink",
+      name: "Pink",
+      className: "bg-primary/20 text-primary border-primary/40",
+      dot: "bg-primary",
+    },
+    {
+      id: "slate",
+      name: "Slate",
+      className: "bg-muted text-muted-foreground border-border",
+      dot: "bg-muted-foreground",
+    },
+  ];
+
+export type Label = {
+  id: LabelId;
+  name: string;
+  color: LabelColor;
+};
+
+export const DEFAULT_LABELS: Label[] = [
+  { id: "priority", name: "Priority", color: "amber" },
+  { id: "bug", name: "Bug", color: "red" },
+  { id: "frontend", name: "Frontend", color: "teal" },
+  { id: "backend", name: "Backend", color: "blue" },
+  { id: "design", name: "Design", color: "violet" },
+  { id: "idea", name: "Idea", color: "green" },
 ];
+
+export function labelClass(color: LabelColor) {
+  return (LABEL_COLORS.find((c) => c.id === color) ?? LABEL_COLORS[7]!).className;
+}
+
+export function labelDot(color: LabelColor) {
+  return (LABEL_COLORS.find((c) => c.id === color) ?? LABEL_COLORS[7]!).dot;
+}
 
 export type ChecklistItem = {
   id: string;
   text: string;
   done: boolean;
+};
+
+export type Attachment = {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  addedAt: string;
 };
 
 export type Card = {
@@ -22,6 +106,7 @@ export type Card = {
   labels?: LabelId[];
   dueDate?: string | null;
   checklist?: ChecklistItem[];
+  attachments?: Attachment[];
 };
 
 export type Column = {
@@ -32,6 +117,7 @@ export type Column = {
 
 export type BoardState = {
   name: string;
+  labels: Label[];
   columns: Column[];
   cards: Record<string, Card>;
 };
@@ -39,6 +125,18 @@ export type BoardState = {
 export const STORAGE_KEY = "openboard.board.v1";
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
+
+export function emptyCard(id: string, title: string): Card {
+  return {
+    id,
+    title,
+    description: "",
+    labels: [],
+    dueDate: null,
+    checklist: [],
+    attachments: [],
+  };
+}
 
 export function createInitialBoard(): BoardState {
   const seed: Array<[string, string[]]> = [
@@ -54,12 +152,17 @@ export function createInitialBoard(): BoardState {
     title,
     cardIds: titles.map((t) => {
       const id = uid();
-      cards[id] = { id, title: t, labels: [], checklist: [], dueDate: null, description: "" };
+      cards[id] = emptyCard(id, t);
       return id;
     }),
   }));
 
-  return { name: "OpenBoard", columns, cards };
+  return {
+    name: "OpenBoard",
+    labels: DEFAULT_LABELS.map((l) => ({ ...l })),
+    columns,
+    cards,
+  };
 }
 
 function normalizeCard(card: Card): Card {
@@ -70,6 +173,7 @@ function normalizeCard(card: Card): Card {
     labels: Array.isArray(card.labels) ? card.labels : [],
     dueDate: card.dueDate ?? null,
     checklist: Array.isArray(card.checklist) ? card.checklist : [],
+    attachments: Array.isArray(card.attachments) ? card.attachments : [],
   };
 }
 
@@ -84,7 +188,11 @@ export function loadBoard(): BoardState {
     Object.values(parsed.cards).forEach((c) => {
       cards[c.id] = normalizeCard(c);
     });
-    return { ...parsed, cards };
+    const labels =
+      Array.isArray(parsed.labels) && parsed.labels.length
+        ? parsed.labels
+        : DEFAULT_LABELS.map((l) => ({ ...l }));
+    return { ...parsed, labels, cards };
   } catch {
     return createInitialBoard();
   }
@@ -125,11 +233,20 @@ export function formatDue(dueDate: string) {
   });
 }
 
-export function matchesQuery(card: Card, query: string) {
+export function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export function matchesQuery(card: Card, labels: Label[], query: string) {
   const q = query.trim().toLowerCase();
   if (!q) return true;
   const labelNames = (card.labels ?? [])
-    .map((id) => LABELS.find((l) => l.id === id)?.name ?? "")
+    .map((id) => labels.find((l) => l.id === id)?.name ?? "")
     .join(" ");
-  return `${card.title} ${card.description ?? ""} ${labelNames}`.toLowerCase().includes(q);
+  const fileNames = (card.attachments ?? []).map((a) => a.name).join(" ");
+  return `${card.title} ${card.description ?? ""} ${labelNames} ${fileNames}`
+    .toLowerCase()
+    .includes(q);
 }
