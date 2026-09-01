@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { Plus, Trash2, X } from "lucide-react";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripHorizontal, Plus, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { KanbanCard } from "./KanbanCard";
-import type { BoardState, Column } from "@/lib/board";
+import { matchesQuery, type BoardState, type Column } from "@/lib/board";
 
 type Props = {
   column: Column;
   cards: BoardState["cards"];
+  query: string;
   onAddCard: (title: string) => void;
-  onRenameCard: (cardId: string, title: string) => void;
+  onOpenCard: (cardId: string) => void;
   onDeleteCard: (cardId: string) => void;
   onRenameColumn: (title: string) => void;
   onDeleteColumn: () => void;
@@ -19,16 +21,26 @@ type Props = {
 export function BoardColumn({
   column,
   cards,
+  query,
   onAddCard,
-  onRenameCard,
+  onOpenCard,
   onDeleteCard,
   onRenameColumn,
   onDeleteColumn,
 }: Props) {
-  const { setNodeRef, isOver } = useDroppable({
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
     id: `column:${column.id}`,
     data: { type: "column", columnId: column.id },
   });
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setSortRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: `col:${column.id}`, data: { type: "columnSort", columnId: column.id } });
+
   const [composing, setComposing] = useState(false);
   const [draft, setDraft] = useState("");
   const [titleDraft, setTitleDraft] = useState(column.title);
@@ -39,14 +51,28 @@ export function BoardColumn({
     setDraft("");
   };
 
+  const visible = column.cardIds.filter((id) => cards[id] && matchesQuery(cards[id], query));
+  const hidden = column.cardIds.length - visible.length;
+
   return (
     <section
+      ref={setSortRef}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
       className={cn(
         "flex w-[19rem] shrink-0 flex-col rounded-xl border border-border bg-secondary/40 backdrop-blur",
         isOver && "border-primary/60 bg-secondary/70",
+        isDragging && "opacity-50",
       )}
     >
       <header className="flex items-center gap-2 px-3 pt-3 pb-2">
+        <button
+          {...attributes}
+          {...listeners}
+          aria-label={`Drag list ${column.title}`}
+          className="cursor-grab text-muted-foreground/60 transition-colors hover:text-foreground active:cursor-grabbing"
+        >
+          <GripHorizontal className="h-4 w-4" />
+        </button>
         {editingTitle ? (
           <input
             autoFocus
@@ -82,23 +108,24 @@ export function BoardColumn({
         </button>
       </header>
 
-      <div ref={setNodeRef} className="flex min-h-24 flex-col gap-2 px-3 pb-2">
-        <SortableContext items={column.cardIds} strategy={verticalListSortingStrategy}>
-          {column.cardIds.map((id) =>
-            cards[id] ? (
-              <KanbanCard
-                key={id}
-                card={cards[id]}
-                onRename={(title) => onRenameCard(id, title)}
-                onDelete={() => onDeleteCard(id)}
-              />
-            ) : null,
-          )}
+      <div ref={setDropRef} className="flex min-h-24 flex-col gap-2 px-3 pb-2">
+        <SortableContext items={visible} strategy={verticalListSortingStrategy}>
+          {visible.map((id) => (
+            <KanbanCard
+              key={id}
+              card={cards[id]}
+              onOpen={() => onOpenCard(id)}
+              onDelete={() => onDeleteCard(id)}
+            />
+          ))}
         </SortableContext>
-        {column.cardIds.length === 0 && (
+        {visible.length === 0 && (
           <p className="rounded-lg border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">
-            Drop cards here
+            {query ? "No matching cards" : "Drop cards here"}
           </p>
+        )}
+        {query && hidden > 0 && visible.length > 0 && (
+          <p className="text-center text-xs text-muted-foreground">{hidden} hidden by filter</p>
         )}
       </div>
 
