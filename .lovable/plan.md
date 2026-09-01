@@ -2,7 +2,7 @@
 
 ## Verdict
 
-Yes, this is very buildable. One correction up front: inside Lovable we don't use Fastify/Electron/Prisma/SQLite. The equivalent stack here is React + TypeScript + TanStack Start (server functions instead of Express/Fastify) + Tailwind + dnd-kit + Lovable Cloud (managed Postgres, auth, storage, realtime, AI). Same architecture, same feature set, far less setup — and it's portable Postgres underneath, so nothing is a dead end. A desktop/offline-first Tauri+SQLite build is out of scope for this environment; the offline story here is PWA + local cache with cloud sync.
+Yes, this is very buildable. One correction up front: inside Lovable we don't use Fastify/Electron/Prisma/SQLite. The equivalent stack here is React + TypeScript + TanStack Start (server functions instead of Express/Fastify) + Tailwind + dnd-kit + Lovable Cloud (managed Postgres, auth, storage, realtime, AI). Same architecture, same feature set, far less setup — and it's portable Postgres underneath, so nothing is a dead end. A native Tauri+SQLite build isn't supported here, but a distributable desktop app **is** achievable via Electron packaging (`@electron/packager`), which produces a standalone app from the same Vite build — see M9.
 
 ## Milestones
 
