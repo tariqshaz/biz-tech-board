@@ -1,6 +1,13 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CalendarDays, CheckSquare, GripVertical, Paperclip, Trash2 } from "lucide-react";
+import {
+  CalendarDays,
+  CheckSquare,
+  GripVertical,
+  MessageSquare,
+  Paperclip,
+  Trash2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   checklistProgress,
@@ -10,15 +17,17 @@ import {
   type Card,
   type Label,
 } from "@/lib/board";
+import type { LabelStyle } from "@/lib/theme";
 
 type Props = {
   card: Card;
   boardLabels: Label[];
+  labelStyle?: LabelStyle;
   onOpen: () => void;
   onDelete: () => void;
 };
 
-export function KanbanCard({ card, boardLabels, onOpen, onDelete }: Props) {
+export function KanbanCard({ card, boardLabels, labelStyle = "soft", onOpen, onDelete }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
     data: { type: "card" },
@@ -57,7 +66,7 @@ export function KanbanCard({ card, boardLabels, onOpen, onDelete }: Props) {
                   key={l.id}
                   className={cn(
                     "rounded-full border px-2 py-0.5 text-[0.65rem] font-medium",
-                    labelClass(l.color),
+                    labelClass(l.color, labelStyle),
                   )}
                 >
                   {l.name}
@@ -68,7 +77,10 @@ export function KanbanCard({ card, boardLabels, onOpen, onDelete }: Props) {
 
           <span className="block text-sm leading-snug text-card-foreground">{card.title}</span>
 
-          {(progress.total > 0 || card.dueDate || (card.attachments ?? []).length > 0) && (
+          {(progress.total > 0 ||
+            card.dueDate ||
+            (card.attachments ?? []).length > 0 ||
+            (card.comments ?? []).length > 0) && (
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {card.dueDate && (
                 <span
@@ -89,6 +101,11 @@ export function KanbanCard({ card, boardLabels, onOpen, onDelete }: Props) {
               {(card.attachments ?? []).length > 0 && (
                 <span className="inline-flex items-center gap-1">
                   <Paperclip className="h-3 w-3" /> {(card.attachments ?? []).length}
+                </span>
+              )}
+              {(card.comments ?? []).length > 0 && (
+                <span className="inline-flex items-center gap-1">
+                  <MessageSquare className="h-3 w-3" /> {(card.comments ?? []).length}
                 </span>
               )}
             </div>
