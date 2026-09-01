@@ -5,11 +5,12 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripHorizontal, Plus, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { KanbanCard } from "./KanbanCard";
-import { matchesQuery, type BoardState, type Column } from "@/lib/board";
+import { matchesQuery, type BoardState, type Column, type Label } from "@/lib/board";
 
 type Props = {
   column: Column;
   cards: BoardState["cards"];
+  boardLabels: Label[];
   query: string;
   onAddCard: (title: string) => void;
   onOpenCard: (cardId: string) => void;
@@ -21,6 +22,7 @@ type Props = {
 export function BoardColumn({
   column,
   cards,
+  boardLabels,
   query,
   onAddCard,
   onOpenCard,
@@ -51,7 +53,7 @@ export function BoardColumn({
     setDraft("");
   };
 
-  const visible = column.cardIds.filter((id) => cards[id] && matchesQuery(cards[id], query));
+  const visible = column.cardIds.filter((id) => cards[id] && matchesQuery(cards[id]!, boardLabels, query));
   const hidden = column.cardIds.length - visible.length;
 
   return (
@@ -114,6 +116,7 @@ export function BoardColumn({
             <KanbanCard
               key={id}
               card={cards[id]!}
+              boardLabels={boardLabels}
               onOpen={() => onOpenCard(id)}
               onDelete={() => onDeleteCard(id)}
             />

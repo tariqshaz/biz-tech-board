@@ -1,23 +1,31 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CalendarDays, CheckSquare, GripVertical, Trash2 } from "lucide-react";
+import { CalendarDays, CheckSquare, GripVertical, Paperclip, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LABELS, checklistProgress, dueStatus, formatDue, type Card } from "@/lib/board";
+import {
+  checklistProgress,
+  dueStatus,
+  formatDue,
+  labelClass,
+  type Card,
+  type Label,
+} from "@/lib/board";
 
 type Props = {
   card: Card;
+  boardLabels: Label[];
   onOpen: () => void;
   onDelete: () => void;
 };
 
-export function KanbanCard({ card, onOpen, onDelete }: Props) {
+export function KanbanCard({ card, boardLabels, onOpen, onDelete }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
     data: { type: "card" },
   });
   const labels = (card.labels ?? [])
-    .map((id) => LABELS.find((l) => l.id === id))
-    .filter(Boolean) as typeof LABELS;
+    .map((id) => boardLabels.find((l) => l.id === id))
+    .filter(Boolean) as Label[];
   const progress = checklistProgress(card);
   const status = dueStatus(card.dueDate);
 
@@ -47,7 +55,10 @@ export function KanbanCard({ card, onOpen, onDelete }: Props) {
               {labels.map((l) => (
                 <span
                   key={l.id}
-                  className={cn("rounded-full border px-2 py-0.5 text-[0.65rem] font-medium", l.className)}
+                  className={cn(
+                    "rounded-full border px-2 py-0.5 text-[0.65rem] font-medium",
+                    labelClass(l.color),
+                  )}
                 >
                   {l.name}
                 </span>
@@ -57,7 +68,7 @@ export function KanbanCard({ card, onOpen, onDelete }: Props) {
 
           <span className="block text-sm leading-snug text-card-foreground">{card.title}</span>
 
-          {(progress.total > 0 || card.dueDate) && (
+          {(progress.total > 0 || card.dueDate || (card.attachments ?? []).length > 0) && (
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {card.dueDate && (
                 <span
@@ -73,6 +84,11 @@ export function KanbanCard({ card, onOpen, onDelete }: Props) {
               {progress.total > 0 && (
                 <span className="inline-flex items-center gap-1">
                   <CheckSquare className="h-3 w-3" /> {progress.done}/{progress.total}
+                </span>
+              )}
+              {(card.attachments ?? []).length > 0 && (
+                <span className="inline-flex items-center gap-1">
+                  <Paperclip className="h-3 w-3" /> {(card.attachments ?? []).length}
                 </span>
               )}
             </div>
